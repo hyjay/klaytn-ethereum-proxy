@@ -53,7 +53,7 @@ const apiProxy = createProxyMiddleware({
         console.log("************ HTTP Response ************");
         const responseJSON = JSON.parse(buffer.toString("utf8"));
         const method = requestMap.get(responseJSON.id);
-        console.log("id: %s", responseJSON.id);
+        requestMap.delete(responseJSON.id);
         console.log("method: %s", method);
 
         const ethCompatibleResponse = responseConverter.convert(method, responseJSON)
