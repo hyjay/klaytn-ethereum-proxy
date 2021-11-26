@@ -19,7 +19,10 @@ const apiProxy = createProxyMiddleware({
   changeOrigin: true,
   selfHandleResponse: true,
   onProxyReq: function (proxyReq: ClientRequest, req: IncomingMessage, res) {
-    let requestBody = [];
+    if (proxyReq.method !== "POST") {
+      return;
+    }
+    const requestBody = [];
     req
       .on("data", (chunk) => {
         requestBody.push(chunk);
@@ -27,18 +30,13 @@ const apiProxy = createProxyMiddleware({
       .on("end", () => {
         console.log("************ HTTP Request ************");
         console.log("Method: %s", req.method);
-        console.log("Path: %s", req.url);
-        console.log("Headers: %s", req.headers);
         const bodyString = Buffer.concat(requestBody).toString();
+        console.log("Request: %s", bodyString);
         try {
-          console.log("requestBody %s", bodyString);
           const bodyJSON = JSON.parse(bodyString);
           requestMap.set(bodyJSON.id, bodyJSON.method);
-          requestMap.forEach((value, key) => {
-            console.log(key, value);
-          });
-        } catch {
-          console.log("Failed to handle request=%s", bodyString);
+        } catch(e) {
+          console.warn("Failed to handle request=%s: %s", bodyString, e);
         }
       });
   },
@@ -55,14 +53,14 @@ const apiProxy = createProxyMiddleware({
         const method = requestMap.get(responseJSON.id);
         requestMap.delete(responseJSON.id);
         console.log("method: %s", method);
-
-        const ethCompatibleResponse = responseConverter.convert(method, responseJSON)
-        return JSON.stringify(ethCompatibleResponse);
+        const ethCompatibleResponse = JSON.stringify(responseConverter.convert(method, responseJSON))
+        console.log("response: %s", ethCompatibleResponse);
+        return ethCompatibleResponse;
       }
       return buffer;
     }
   ),
-  logLevel: "debug",
+  logLevel: "info",
 });
 
 app.use(apiProxy);
