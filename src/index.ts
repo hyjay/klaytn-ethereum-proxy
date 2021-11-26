@@ -22,12 +22,16 @@ const apiProxy = createProxyMiddleware({
         console.log("Path: %s", req.url);
         console.log("Headers: %s", req.headers);
         const bodyString = Buffer.concat(requestBody).toString();
-        console.log("requestBody %s", bodyString);
-        const bodyJSON = JSON.parse(bodyString);
-        requestMap.set(bodyJSON.id, bodyJSON.method);
-        requestMap.forEach((value, key) => {
-          console.log(key, value);
-        });
+        try {
+          console.log("requestBody %s", bodyString);
+          const bodyJSON = JSON.parse(bodyString);
+          requestMap.set(bodyJSON.id, bodyJSON.method);
+          requestMap.forEach((value, key) => {
+            console.log(key, value);
+          });
+        } catch {
+          console.log("Failed to handle request=%s", bodyString);
+        }
       });
   },
   onProxyRes: responseInterceptor(
