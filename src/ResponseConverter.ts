@@ -1,21 +1,21 @@
-import ResponseModifier from "./ResponseModifier";
+import ResultModifier from "./ResultModifier";
 
 export default class ResponseConverter {
 
-  private responseModifiers: Map<string, ResponseModifier> = new Map();
+  private resultModifiers: Map<string, ResultModifier> = new Map();
 
-  constructor(responseModifiers: [ResponseModifier]) {
-    responseModifiers.forEach(rc => this.responseModifiers[rc.method()] = rc);
+  constructor(resultModifiers: Array<ResultModifier>) {
+    resultModifiers.forEach(rc => this.resultModifiers[rc.method()] = rc);
   }
 
   convert(method: string, originalResponse: JSON): JSON {
-    const rm = this.responseModifiers[method];
+    const newResponse = this.copy(originalResponse);
+    const rm = this.resultModifiers[method];
     if (!rm) {
-      throw Error("No matching response modifier for the method.");
+      return newResponse;
     }
-    const result = this.copy(originalResponse);
-    rm.modify(result);
-    return result;
+    rm.modify(newResponse["result"]);
+    return newResponse;
   }
 
   private copy(originalResponse: JSON) {

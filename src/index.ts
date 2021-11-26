@@ -2,9 +2,17 @@ import * as express from "express";
 import {createProxyMiddleware, responseInterceptor,} from "http-proxy-middleware";
 import {ClientRequest, IncomingMessage, ServerResponse} from "http";
 import bodyParser = require("body-parser");
+import ResponseConverter from "./ResponseConverter";
+import TransactionResultModifier from "./TransactionResultModifier";
+import TransactionReceiptResultModifier from "./TransactionReceiptResultModifier";
 
 const app = express();
 const requestMap = new Map<number, string>();
+
+const responseConverter = new ResponseConverter([
+  new TransactionResultModifier(),
+  new TransactionReceiptResultModifier(),
+])
 
 const apiProxy = createProxyMiddleware({
   target: "https://kaikas.baobab.klaytn.net:8651",
@@ -48,41 +56,9 @@ const apiProxy = createProxyMiddleware({
         console.log("id: %s", responseJSON.id);
         console.log("method: %s", method);
 
-        // klaytn converter
-        if (method === "eth_getTransactionReceipt") {
-          const { jsonrpc, id, result } = responseJSON;
-          if (result != null) {
-            console.log("jsonrpc: %s", jsonrpc);
-            console.log(result);
-            const { type, ...others } = result;
-            const newResult = {
-              ...others,
-              type: "0x0",
-              cumulativeGasUsed: "0x0",
-            };
-            const newResponse = { jsonrpc, id, result: newResult };
-            console.log(JSON.stringify(newResponse));
-            return JSON.stringify(newResponse);
-          }
-        } else if (method === "eth_getTransactionByHash") {
-          const { jsonrpc, id, result } = responseJSON;
-          if (result != null) {
-            console.log("jsonrpc: %s", jsonrpc);
-            console.log(result);
-            const { type, ...others } = result;
-            const newResult = {
-              ...others,
-              type: "0x0",
-            };
-            const newResponse = { jsonrpc, id, result: newResult };
-            console.log(JSON.stringify(newResponse));
-            return JSON.stringify(newResponse);
-          }
-        }
-
-        return JSON.stringify(responseJSON);
+        const ethCompatibleResponse = responseConverter.convert(method, responseJSON)
+        return JSON.stringify(ethCompatibleResponse);
       }
-
       return buffer;
     }
   ),

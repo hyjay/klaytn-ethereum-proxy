@@ -1,9 +1,9 @@
 import ResponseConverter from "../src/ResponseConverter";
-import ResponseModifier from "../src/ResponseModifier";
+import ResultModifier from "../src/ResultModifier";
 
-class FakeResponseModifier implements ResponseModifier {
-  modify(response: JSON): void {
-    response["foo"] = "bar";
+class FakeResultModifier implements ResultModifier {
+  modify(result: JSON): void {
+    result["foo"] = "bar";
   }
 
   method(): string {
@@ -13,8 +13,8 @@ class FakeResponseModifier implements ResponseModifier {
 
 describe('ResponseConverter', function () {
   it('should convert an original response to an ethereum-compatible response delegating to a response modifier', function () {
-    const aggregator = new ResponseConverter([new FakeResponseModifier()]);
-    const result = aggregator.convert("eth_getBlockByNumber", JSON.parse('{}'));
-    expect(result).toStrictEqual(JSON.parse('{"foo":"bar"}'))
+    const aggregator = new ResponseConverter([new FakeResultModifier()]);
+    const result = aggregator.convert("eth_getBlockByNumber", JSON.parse('{"jsonrpc":"2.0","id":45,"result":{}}'));
+    expect(result).toStrictEqual(JSON.parse('{"jsonrpc":"2.0","id":45,"result":{"foo":"bar"}}'))
   });
 });
