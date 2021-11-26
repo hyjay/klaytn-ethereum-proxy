@@ -5,6 +5,7 @@ import bodyParser = require("body-parser");
 import ResponseConverter from "./ResponseConverter";
 import TransactionResultModifier from "./TransactionResultModifier";
 import TransactionReceiptResultModifier from "./TransactionReceiptResultModifier";
+import BlockResultModifier from "./BlockResultModifier";
 
 const app = express();
 const requestMap = new Map<number, string>();
@@ -12,6 +13,7 @@ const requestMap = new Map<number, string>();
 const responseConverter = new ResponseConverter([
   new TransactionResultModifier(),
   new TransactionReceiptResultModifier(),
+  new BlockResultModifier(),
 ])
 
 const apiProxy = createProxyMiddleware({
